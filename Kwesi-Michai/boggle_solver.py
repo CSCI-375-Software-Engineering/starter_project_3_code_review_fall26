@@ -1,9 +1,3 @@
-"""
-Name: KWESI MICHAI
-SID: 003108059
-"""
-
-
 class Boggle:
     VALID_MULTI = {"qu", "st", "ie"}
 
