@@ -3,7 +3,13 @@ Matthew Herriman
 @03130572
 """
 
+
 class Boggle:
+    # The eight neighbors of a tile, including diagonals.
+    DIRECTIONS = [(-1, -1), (-1, 0), (-1, 1),
+                  (0, -1), (0, 1),
+                  (1, -1), (1, 0), (1, 1)]
+
     def __init__(self, grid, dictionary):
         self.grid = grid
         self.dictionary = dictionary
@@ -18,34 +24,28 @@ class Boggle:
         self.dictionary = dictionary
 
     def validInput(self):
-        # Check that the grid is a list.
-        if not isinstance(self.grid, list):
+        # Check that the grid is a non-empty list of lists.
+        if not isinstance(self.grid, list) or len(self.grid) == 0:
             return False
 
-        if len(self.grid) == 0:
-            return False
-
-        # Check that every row is a list.
         for row in self.grid:
             if not isinstance(row, list):
                 return False
 
+        # Check that rows are non-empty, the same length,
+        # and that every tile is a string.
         columns = len(self.grid[0])
-
         if columns == 0:
             return False
 
-        # Check that all rows have the same number of columns
-        # and that every tile is a string.
         for row in self.grid:
             if len(row) != columns:
                 return False
-
             for tile in row:
                 if not isinstance(tile, str):
                     return False
 
-        # Check that the dictionary is a list.
+        # Check that the dictionary is a list of strings.
         if not isinstance(self.dictionary, list):
             return False
 
@@ -56,72 +56,66 @@ class Boggle:
         return True
 
     def getSolution(self):
+        # Start fresh so repeated calls do not duplicate results.
+        self.solutions = []
+
         if not self.validInput():
-            return []
+            return self.solutions
 
         # Search for every dictionary word in the grid.
         for word in self.dictionary:
-            if len(word) >= 3:
-                if self.findWord(word):
-                    self.solutions.append(word)
+            if len(word) >= 3 and self.findWord(word):
+                self.solutions.append(word)
 
         return self.solutions
 
     def findWord(self, word):
-        # Check every tile as a possible starting point.
+        # Lowercase once here instead of on every recursive call.
+        word = word.lower()
+
+        # Try every tile as a starting point.
         for row in range(len(self.grid)):
             for col in range(len(self.grid[row])):
-                tile = self.grid[row][col].lower()
-
-                if word.lower().startswith(tile):
-                    if self.search(row, col, word, 0, []):
-                        return True
+                if self.search(row, col, word, 0, set()):
+                    return True
 
         return False
 
     def search(self, row, col, word, index, used):
+        # The whole word has been matched.
         if index == len(word):
             return True
 
         # Make sure the position is inside the grid.
-        if row < 0 or row >= len(self.grid):
+        if not (0 <= row < len(self.grid)):
             return False
-
-        if col < 0 or col >= len(self.grid[row]):
+        if not (0 <= col < len(self.grid[row])):
             return False
 
         # A tile cannot be used more than once.
-        if [row, col] in used:
+        if (row, col) in used:
             return False
 
+        # The tile must match the word at the current position.
         tile = self.grid[row][col].lower()
-
-        if word.lower().startswith(tile, index) == False:
+        if not word.startswith(tile, index):
             return False
 
-        used.append([row, col])
+        used.add((row, col))
 
-        # Move forward by the number of letters in the tile.
-        # This handles Qu, St, and Ie as two-letter tiles.
+        # Move forward by the number of letters in the tile,
+        # so tiles like Qu, St, and Ie are handled.
         next_index = index + len(tile)
 
-        # Check all eight neighboring tiles, including diagonals.
-        for row_change in [-1, 0, 1]:
-            for col_change in [-1, 0, 1]:
-                if row_change == 0 and col_change == 0:
-                    continue
+        # Try all eight neighbors; stop at the first success.
+        found = any(
+            self.search(row + d_row, col + d_col, word, next_index, used)
+            for d_row, d_col in self.DIRECTIONS
+        )
 
-                if self.search(row + row_change,
-                               col + col_change,
-                               word,
-                               next_index,
-                               used):
-                    used.pop()
-                    return True
-
-        # Backtrack if this path does not work.
-        used.pop()
-        return False
+        # Backtrack: free this tile for other paths.
+        used.remove((row, col))
+        return found
 
 
 def main():
@@ -138,3 +132,5 @@ def main():
 
 if __name__ == "__main__":
     main()
+    
+
