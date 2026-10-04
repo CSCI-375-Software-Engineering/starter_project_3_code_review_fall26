@@ -33,7 +33,7 @@ class Boggle:
                 return False
 
         # Check that rows are non-empty, the same length,
-        # and that every tile is a string.
+        # and that every tile is a non-empty string.
         columns = len(self.grid[0])
         if columns == 0:
             return False
@@ -42,7 +42,7 @@ class Boggle:
             if len(row) != columns:
                 return False
             for tile in row:
-                if not isinstance(tile, str):
+                if not isinstance(tile, str) or tile == "":
                     return False
 
         # Check that the dictionary is a list of strings.
@@ -64,6 +64,9 @@ class Boggle:
 
         # Search for every dictionary word in the grid.
         for word in self.dictionary:
+            # Skip words already found (duplicates in the dictionary).
+            if word in self.solutions:
+                continue
             if len(word) >= 3 and self.findWord(word):
                 self.solutions.append(word)
 
