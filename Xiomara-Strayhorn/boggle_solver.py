@@ -11,18 +11,27 @@ class Boggle:
 
     def __init__(self, grid, dictionary):
         self.solution = []
-        self.setGrid(grid)
-        self.setDictionary(dictionary)
+        self.set_grid(grid)
+        self.set_dictionary(dictionary)
 
-    def setGrid(self, grid):
+    def set_grid(self, grid):
         """Replace the board and discard any previous result."""
         self.grid = grid
         self.solution = []
 
-    def setDictionary(self, dictionary):
+    def set_dictionary(self, dictionary):
         """Replace the candidate words and discard any previous result."""
         self.dictionary = dictionary
         self.solution = []
+
+    # Keep the assignment's public method names for existing callers.
+    def setGrid(self, grid):
+        """Use the assignment-compatible name for set_grid."""
+        self.set_grid(grid)
+
+    def setDictionary(self, dictionary):
+        """Use the assignment-compatible name for set_dictionary."""
+        self.set_dictionary(dictionary)
 
     def _valid_inputs(self):
         """Reject malformed boards or dictionaries without raising errors."""
@@ -59,7 +68,7 @@ class Boggle:
         board = [[tile.lower() for tile in row] for row in self.grid]
         rows, columns = len(board), len(board[0])
         capacity = sum(len(tile) for row in board for tile in row)
-        words = {}
+        word_map = {}
         trie = {}
         for word in self.dictionary:
             key = word.lower()
@@ -67,9 +76,9 @@ class Boggle:
                 continue
             if not all('a' <= letter <= 'z' for letter in key):
                 continue
-            if key in words:
+            if key in word_map:
                 continue
-            words[key] = word
+            word_map[key] = word
             node = trie
             for letter in key:
                 node = node.setdefault(letter, {})
@@ -87,18 +96,20 @@ class Boggle:
             word = node.get(None)
             if word is not None:
                 found.add(word)
+            # Mark this tile as used only within the current search path.
             visited.add((row, column))
             for next_row in range(max(0, row - 1), min(rows, row + 2)):
                 for next_column in range(max(0, column - 1),
                                          min(columns, column + 2)):
                     if (next_row, next_column) not in visited:
                         search(next_row, next_column, node)
+            # Backtrack so a different path can use this tile again.
             visited.remove((row, column))
 
         for row in range(rows):
             for column in range(columns):
                 search(row, column, trie)
-        self.solution = [spelling for key, spelling in words.items()
+        self.solution = [spelling for key, spelling in word_map.items()
                          if key in found]
         return self.solution
 
@@ -113,7 +124,8 @@ def main():
             ["G", "St", "Qu", "R"], ["O", "N", "T", "A"]]
     dictionary = ["art", "ego", "gent", "get", "net", "new", "newt",
                   "prat", "pry", "qua", "quart", "rat", "tar", "tarp",
-                  "ten", "went", "wet", "stont", "stqura", "arty", "egg", "not"]
+                  "ten", "went", "wet", "stont", "stqura", "arty", "egg",
+                  "not"]
     print(Boggle(grid, dictionary).getSolution())
 
 
