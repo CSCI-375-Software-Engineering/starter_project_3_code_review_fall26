@@ -4,7 +4,11 @@ SID: 004003288
 
 This program finds words on a Boggle board.
 """
-
+DIRECTIONS = [
+    (-1, -1), (-1, 0), (-1, 1),
+    (0, -1),           (0, 1),
+    (1, -1),  (1, 0),  (1, 1)
+]
 
 class Boggle:
     """This class stores and solves one Boggle game."""
@@ -93,22 +97,16 @@ class Boggle:
         used.add((row, column))
 
         # Check the eight tiles around the current tile.
-        for row_move in [-1, 0, 1]:
-            for column_move in [-1, 0, 1]:
-
-                if row_move == 0 and column_move == 0:
-                    continue
-
-                if self.search(
-                    word,
-                    row + row_move,
-                    column + column_move,
-                    next_position,
-                    used
-                ):
-                    used.remove((row, column))
-                    return True
-
+        for row_move, column_move in DIRECTIONS:
+            if self.search(
+                word,
+                row + row_move,
+                column + column_move,
+                next_position,
+                used
+            ):
+                used.remove((row, column))
+                return True
         # Remove the tile so it can be used in another path.
         used.remove((row, column))
         return False
@@ -117,7 +115,7 @@ class Boggle:
         """Finds and returns all valid words."""
 
         self.solutions = []
-
+        added_words = set()
         if not self.validInput():
             return []
 
@@ -130,9 +128,9 @@ class Boggle:
             lowercase_word = word.lower()
 
             if self.findWord(lowercase_word):
-                if word not in self.solutions:
+                if word not in added_words:
                     self.solutions.append(word)
-
+                    added_words.add(word)
         return self.solutions
 
 
