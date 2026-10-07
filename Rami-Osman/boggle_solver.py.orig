@@ -24,33 +24,6 @@ class Boggle:
         self.dictionary = dictionary
         self.solution = []
 
-    @property
-    def dictionary(self):
-        """The list of words to look for."""
-        return self._dictionary
-
-    @dictionary.setter
-    def dictionary(self, dictionary):
-        """Stores the dictionary and lowercases it once, here.
-
-        Doing this when the dictionary is set means getSolution() does
-        not repeat the conversion on every call. Invalid dictionaries
-        leave _entries as None so getSolution() can return [].
-        """
-        self._dictionary = dictionary
-        self._entries = None
-        self._words = set()
-        self._prefixes = set()
-
-        if not self._is_word_list(dictionary):
-            return
-
-        # Each entry pairs the caller's spelling with its lowercase form.
-        self._entries = [(word, word.lower()) for word in dictionary]
-        self._words = {lowered for _, lowered in self._entries
-                       if len(lowered) >= MIN_WORD_LENGTH}
-        self._prefixes = self._build_prefixes(self._words)
-
     def setGrid(self, grid):
         """Replaces the grid and clears any old solution."""
         self.grid = grid
@@ -61,19 +34,12 @@ class Boggle:
         self.dictionary = dictionary
         self.solution = []
 
-    @staticmethod
-    def _is_word_list(dictionary):
-        """Returns True if the dictionary is a list of strings."""
-        if not isinstance(dictionary, list):
-            return False
-        return all(isinstance(word, str) for word in dictionary)
-
     def _is_valid_input(self):
         """Returns True if the grid is a square list of non-empty
         strings and the dictionary is a list of strings."""
-        if self._entries is None:
-            return False
         if not isinstance(self.grid, list) or len(self.grid) == 0:
+            return False
+        if not isinstance(self.dictionary, list):
             return False
 
         size = len(self.grid)
@@ -83,6 +49,10 @@ class Boggle:
             for tile in row:
                 if not isinstance(tile, str) or tile == "":
                     return False
+
+        for word in self.dictionary:
+            if not isinstance(word, str):
+                return False
         return True
 
     def _build_prefixes(self, words):
@@ -93,7 +63,7 @@ class Boggle:
                 prefixes.add(word[:end])
         return prefixes
 
-    def _search(self, row, column, current, used, found):
+    def _search(self, row, column, current, used, words, prefixes, found):
         """Extends the path through (row, column) using depth-first search.
 
         current is the text spelled so far, used holds the tiles on the
@@ -106,16 +76,16 @@ class Boggle:
             return
 
         current = current + self.grid[row][column].lower()
-        if current not in self._prefixes:
+        if current not in prefixes:
             return
 
-        if current in self._words:
+        if current in words:
             found.add(current)
 
         used.add((row, column))
         for row_move, column_move in DIRECTIONS:
             self._search(row + row_move, column + column_move,
-                         current, used, found)
+                         current, used, words, prefixes, found)
         used.remove((row, column))
 
     def getSolution(self):
@@ -127,13 +97,20 @@ class Boggle:
         if not self._is_valid_input():
             return []
 
+        words = set()
+        for word in self.dictionary:
+            if len(word) >= MIN_WORD_LENGTH:
+                words.add(word.lower())
+        prefixes = self._build_prefixes(words)
+
         found = set()
         for row in range(len(self.grid)):
             for column in range(len(self.grid)):
-                self._search(row, column, "", set(), found)
+                self._search(row, column, "", set(), words, prefixes, found)
 
         # Keep the caller's spelling and the dictionary's order.
-        for word, lowered in self._entries:
+        for word in self.dictionary:
+            lowered = word.lower()
             if lowered in found and word not in self.solution:
                 self.solution.append(word)
         return self.solution
