@@ -1,4 +1,7 @@
 
+    
+
+
 """
 NAME: Nydeef Taylor
 SID: 004003163
@@ -6,7 +9,6 @@ SID: 004003163
 Boggle Solver
 CSCI 363 - Large Scale Programming
 """
-
 
 class Boggle:
     """
@@ -31,22 +33,18 @@ class Boggle:
         """Set the Boggle grid if it is a valid 2D list of strings."""
         if not isinstance(grid, list) or len(grid) == 0:
             self.grid = []
-            self.solution = []
             return
 
         if not all(isinstance(row, list) for row in grid):
             self.grid = []
-            self.solution = []
             return
 
         if not all(len(row) == len(grid[0]) for row in grid):
             self.grid = []
-            self.solution = []
             return
 
         if len(grid[0]) == 0:
             self.grid = []
-            self.solution = []
             return
 
         valid_tiles = {"QU", "ST", "IE"}
@@ -55,48 +53,32 @@ class Boggle:
             for tile in row:
                 if not isinstance(tile, str) or tile == "":
                     self.grid = []
-                    self.solution = []
                     return
 
-                # Special tiles contain two letters.
-                if len(tile) == 1:
-                    if not tile.isalpha():
-                        self.grid = []
-                        self.solution = []
-                        return
-                elif tile.upper() not in valid_tiles:
+                # Normal tiles are one letter. Special tiles are two letters.
+                if len(tile) != 1 and tile.upper() not in valid_tiles:
                     self.grid = []
-                    self.solution = []
                     return
 
-        # Copy the grid so external changes do not affect this game.
+        # Store a copy so the original grid cannot accidentally be changed.
         self.grid = [row[:] for row in grid]
-        self.solution = self._findSolutions()
 
     def setDictionary(self, dictionary):
         """Set the dictionary if it is a valid list of words."""
         if not isinstance(dictionary, list):
             self.dictionary = []
-            self.solution = []
             return
 
         for word in dictionary:
             if not isinstance(word, str):
                 self.dictionary = []
-                self.solution = []
                 return
 
-        # Normalize words before removing duplicates.
-        # This treats words such as "cat" and "CAT" as the same word.
-        self.dictionary = list(
-            dict.fromkeys(word.upper() for word in dictionary)
-        )
-
-        # Refresh results whenever the dictionary changes.
-        self.solution = self._findSolutions()
+        # Store a copy and remove duplicate words.
+        self.dictionary = list(dict.fromkeys(dictionary))
 
     def getSolution(self):
-        """Return a copy of all dictionary words found on the board."""
+        """Return a list of all dictionary words found on the board."""
         return self.solution[:]
 
     def _findSolutions(self):
@@ -104,11 +86,14 @@ class Boggle:
         if not self.grid or not self.dictionary:
             return []
 
-        # Only consider words that have at least three letters.
+        # Convert dictionary words to uppercase for case-insensitive matching.
         words = []
         for word in self.dictionary:
-            if len(word) >= 3:
-                words.append(word)
+            word_upper = word.upper()
+
+            # Words must be at least 3 letters long.
+            if len(word_upper) >= 3:
+                words.append(word_upper)
 
         found = []
 
@@ -158,10 +143,9 @@ class Boggle:
         if new_position == len(word):
             return True
 
-        # Track this tile while exploring neighboring positions.
         used.add((row, col))
 
-        # Check all eight neighbors, including diagonals.
+        # Check all 8 neighboring positions, including diagonals.
         for row_change in (-1, 0, 1):
             for col_change in (-1, 0, 1):
                 if row_change == 0 and col_change == 0:
@@ -177,7 +161,6 @@ class Boggle:
                     used.remove((row, col))
                     return True
 
-        # Backtrack so this tile can be used in other search paths.
         used.remove((row, col))
         return False
 
@@ -199,3 +182,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+  
