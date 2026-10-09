@@ -194,6 +194,7 @@ def main():
     dictionary = ["ABEF", "AFJIEB", "DGKD", "DGKA"]
 
     mygame = Boggle(grid, dictionary)
+
     print(mygame.getSolution())
 
 
