@@ -1,90 +1,130 @@
+"""Find dictionary words in a Boggle grid."""
+
+
 class Boggle:
+    """Solve a square Boggle board against a supplied dictionary."""
+
     VALID_MULTI = {"qu", "st", "ie"}
 
     def __init__(self, grid, dictionary):
         self.grid = []
         self.dictionary = set()
         self.solutions = []
-        self.setGrid(grid)
-        self.setDictionary(dictionary)
+        self.set_grid(grid)
+        self.set_dictionary(dictionary)
 
-    def setGrid(self, grid):
+    def set_grid(self, grid):
+        """Set the board, using an empty list when no grid is provided."""
         self.grid = grid if grid is not None else []
 
-    def setDictionary(self, dictionary):
+    def set_dictionary(self, dictionary):
+        """Keep alphabetic dictionary words of at least three letters."""
         self.dictionary = set()
         if dictionary:
             for word in dictionary:
-                if isinstance(word, str) and word.isalpha() and len(word) >= 3:
+                if (
+                    isinstance(word, str)
+                    and word.isalpha()
+                    and len(word) >= 3
+                ):
                     self.dictionary.add(word.lower())
 
     def _normalized_grid(self):
-        """Returns a lowercase copy of the grid, or None if the grid is invalid."""
-        n = len(self.grid)
-        if n == 0:
+        """Return a lowercase copy of the grid, or None if it is invalid."""
+        size = len(self.grid)
+        if size == 0:
             return None
+
         board = []
         for row in self.grid:
-            if not isinstance(row, (list, tuple)) or len(row) != n:
+            if not isinstance(row, (list, tuple)) or len(row) != size:
                 return None
-            new_row = []
+
+            normalized_row = []
             for tile in row:
                 if not isinstance(tile, str) or not tile.isalpha():
                     return None
-                t = tile.lower()
-                if len(t) == 1:
-                    if t == "q":
+
+                normalized_tile = tile.lower()
+                if len(normalized_tile) == 1:
+                    # A single q is not allowed; use the "Qu" tile instead.
+                    if normalized_tile == "q":
                         return None
-                elif t not in self.VALID_MULTI:
+                elif normalized_tile not in self.VALID_MULTI:
                     return None
-                new_row.append(t)
-            board.append(new_row)
+
+                normalized_row.append(normalized_tile)
+            board.append(normalized_row)
+
         return board
 
-    def getSolution(self):
+    def get_solution(self):
+        """Return all dictionary words that can be formed on the board."""
         board = self._normalized_grid()
         if board is None or not self.dictionary:
             self.solutions = []
             return self.solutions
 
+        # Prefix pruning stops a search as soon as it cannot match any word.
         prefixes = set()
         for word in self.dictionary:
-            for i in range(1, len(word) + 1):
-                prefixes.add(word[:i])
+            for end in range(1, len(word) + 1):
+                prefixes.add(word[:end])
 
-        n = len(board)
+        size = len(board)
         found = set()
-        visited = [[False] * n for _ in range(n)]
+        visited = [[False] * size for _ in range(size)]
 
-        def dfs(r, c, current):
-            current += board[r][c]
+        def search(row, column, current):
+            current += board[row][column]
             if current not in prefixes:
                 return
+
             if len(current) >= 3 and current in self.dictionary:
                 found.add(current)
-            visited[r][c] = True
-            for dr in (-1, 0, 1):
-                for dc in (-1, 0, 1):
-                    nr, nc = r + dr, c + dc
-                    if (dr or dc) and 0 <= nr < n and 0 <= nc < n and not visited[nr][nc]:
-                        dfs(nr, nc, current)
-            visited[r][c] = False
 
-        for r in range(n):
-            for c in range(n):
-                dfs(r, c, "")
+            visited[row][column] = True
+            for row_delta in (-1, 0, 1):
+                for column_delta in (-1, 0, 1):
+                    next_row = row + row_delta
+                    next_column = column + column_delta
+                    in_bounds = (
+                        0 <= next_row < size
+                        and 0 <= next_column < size
+                    )
+                    if (
+                        (row_delta or column_delta)
+                        and in_bounds
+                        and not visited[next_row][next_column]
+                    ):
+                        search(next_row, next_column, current)
+
+            # Allow this tile to be used by a different search path.
+            visited[row][column] = False
+
+        for row in range(size):
+            for column in range(size):
+                search(row, column, "")
 
         self.solutions = sorted(found)
         return self.solutions
 
 
 def main():
-    grid = [["T", "W", "Y", "R"], ["E", "N", "P", "H"], ["G", "Z", "Qu", "R"], ["O", "N", "T", "A"]]
-    dictionary = ["art", "ego", "gent", "get", "net", "new", "newt", "prat", "pry", "qua", "quart", "quartz",
-                  "rat", "tar", "tarp", "ten", "went", "wet", "arty", "rhr", "not", "quar"]
+    grid = [
+        ["T", "W", "Y", "R"],
+        ["E", "N", "P", "H"],
+        ["G", "Z", "Qu", "R"],
+        ["O", "N", "T", "A"],
+    ]
+    dictionary = [
+        "art", "ego", "gent", "get", "net", "new", "newt", "prat",
+        "pry", "qua", "quart", "quartz", "rat", "tar", "tarp", "ten",
+        "went", "wet", "arty", "rhr", "not", "quar",
+    ]
 
-    mygame = Boggle(grid, dictionary)
-    print(mygame.getSolution())
+    game = Boggle(grid, dictionary)
+    print(game.get_solution())
 
 
 if __name__ == "__main__":
