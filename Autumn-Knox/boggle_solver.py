@@ -4,6 +4,14 @@ class Boggle:
         self.dictionary = dictionary
         self.solutions = []
 
+    def setGrid(self, new_grid):
+        """Update the Boggle grid."""
+        self.grid = new_grid
+
+    def setDictionary(self, new_dictionary):
+        """Update the dictionary used by the solver."""
+        self.dictionary = new_dictionary
+
     def getSolution(self):
         self.solutions = []
 
@@ -19,6 +27,7 @@ class Boggle:
 
             found = False
 
+            # Search from each tile to see if the word can be formed
             for row in range(len(self.grid)):
                 for col in range(len(self.grid[row])):
                     if self.search(word, row, col, 0, set()):
