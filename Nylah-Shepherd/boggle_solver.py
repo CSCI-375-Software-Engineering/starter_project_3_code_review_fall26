@@ -89,23 +89,34 @@ class Boggle:
                         return True
 
         return False
+
+    #check if grid is valid 
+    def isValidGrid(self):
+    if not isinstance(self.Grid, list) or len(self.Grid) == 0:
+        return False
+
+    for row in self.Grid:
+        if not isinstance(row, list) or len(row) == 0:
+            return False
+
+        for tile in row:
+            if not isinstance(tile, str):
+                return False
+
+            # Only Qu, St, and Ie can be two-letter tiles.
+            if len(tile) > 1 and tile.lower() not in ["qu", "st", "ie"]:
+                return []
+
+    return True
     
     #find all words in dictionary on board
     def getSolution(self):
         self.solution = []
+        
         # Check that the grid is valid.
-        if not isinstance(self.Grid, list) or len(self.Grid) == 0:
+        if not self.isValidGrid():
             return []
 
-        for row in self.Grid:
-            if not isinstance(row, list) or len(row) == 0:
-                return []
-            for tile in row:
-                if not isinstance(tile, str):
-                    return []
-                # Only Qu, St, and Ie can be two-letter tiles.
-                if len(tile) > 1 and tile.lower() not in ["qu", "st", "ie"]:
-                    return []
         # Check that the dictionary is valid.
         if not isinstance(self.Dictionary, list):
             return []
@@ -113,6 +124,7 @@ class Boggle:
         for word in self.Dictionary:
             if not isinstance(word, str):
                 return []
+                
         # Check every dictionary word.
         for word in self.Dictionary:
             if self.findWord(word):
