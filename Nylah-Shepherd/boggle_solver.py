@@ -92,22 +92,22 @@ class Boggle:
 
     #check if grid is valid 
     def isValidGrid(self):
-    if not isinstance(self.Grid, list) or len(self.Grid) == 0:
+      if not isinstance(self.Grid, list) or len(self.Grid) == 0:
         return False
 
-    for row in self.Grid:
+      for row in self.Grid:
         if not isinstance(row, list) or len(row) == 0:
-            return False
+          return False
 
         for tile in row:
-            if not isinstance(tile, str):
-                return False
+          if not isinstance(tile, str):
+              return False
 
             # Only Qu, St, and Ie can be two-letter tiles.
-            if len(tile) > 1 and tile.lower() not in ["qu", "st", "ie"]:
-                return []
+          if len(tile) > 1 and tile.lower() not in ["qu", "st", "ie"]:
+              return []
 
-    return True
+        return True
     
     #find all words in dictionary on board
     def getSolution(self):
